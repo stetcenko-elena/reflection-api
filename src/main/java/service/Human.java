@@ -1,13 +1,20 @@
 package service;
 
-/**
- * Created by Дмитрий on 4/4/2016.
- */
-public class Human {
-    public String name;
-    public String date;
+import anotations.CustomDateFormat;
+import anotations.JasonValue;
 
-    public Human(String name, String date) {
+import java.time.LocalDate;
+
+public class Human {
+
+    @JasonValue(name = "FullName")
+    public String name;
+
+    @JasonValue(name = "BirthDate")
+    @CustomDateFormat(format = "dd-MM-yyyy")
+    public LocalDate date;
+
+    public Human(String name, LocalDate date) {
         this.name = name;
         this.date = date;
     }
