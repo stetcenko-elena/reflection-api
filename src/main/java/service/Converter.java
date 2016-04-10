@@ -1,16 +1,22 @@
 package service;
 
-
 import anotations.CustomDateFormat;
 import anotations.JasonValue;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Converter {
+
     public String toJson(Object object) throws IllegalAccessException {
+
         boolean flag = false;
         Class ob = object.getClass();
         Field[] fields = ob.getDeclaredFields();
@@ -52,12 +58,20 @@ public class Converter {
         return json;
     }
 
+    public <T> T fromJson(String json, Class<T> param) throws IOException, IllegalAccessException, InstantiationException {
 
+        Map<String, String> mapRes = new ObjectMapper().readValue(
+                json, new TypeReference<HashMap<String, String>>() {
+                });
+        Object object = param.newInstance();
 
-    public static void main(String[] args) throws IllegalAccessException {
-        Human human = new Human("1", LocalDate.now());
-        Converter converter = new Converter();
-        String json = converter.toJson(human);
-        System.out.println(json);
+        Field[] fields = param.getFields();
+        for (Field field : fields) {
+            String fieldValue = mapRes.get(field.getName());
+            if (fieldValue != null) {
+                field.set(object, fieldValue);
+            }
+        }
+        return (T) object;
     }
 }
