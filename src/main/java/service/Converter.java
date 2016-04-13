@@ -18,6 +18,7 @@ public class Converter {
     public String toJson(Object object) throws IllegalAccessException {
 
         boolean flag = false;
+        boolean flag2 = false;
         Class ob = object.getClass();
         Field[] fields = ob.getDeclaredFields();
         String json = "{\n";
@@ -36,16 +37,22 @@ public class Converter {
                     if (annotation.annotationType().equals(JasonValue.class)) {
                         JasonValue jasonValue = fields[i].getAnnotation(JasonValue.class);
                         json += "\"" + jasonValue.name() + "\"" + " : " + "\"";
+                        flag2 = true;
+                    } else{
+                        if (!flag2) json += "\"" + fields[i].getName() + "\"" + " : " + "\"";
                     }
                     if (annotation.annotationType().equals(CustomDateFormat.class)) {
+                        flag = true;
                         LocalDate date = (LocalDate) fields[i].get(object);
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(fields[i].getAnnotation(CustomDateFormat.class).format());
                         String format = formatter.format(date);
                         json += format;
-                        flag = true;
+
                     }
                 }
-                if (!flag) json += fields[i].get(object);
+                if (!flag) {
+                    json += fields[i].get(object);
+                }
 
                 if (i == fields.length - 1) {
                     json += "\"\n";
@@ -65,13 +72,16 @@ public class Converter {
                 });
         Object object = param.newInstance();
 
-        Field[] fields = param.getFields();
+        Field[] fields = param.getDeclaredFields();
         for (Field field : fields) {
             String fieldValue = mapRes.get(field.getName());
             if (fieldValue != null) {
+                field.setAccessible(true);
                 field.set(object, fieldValue);
+                field.setAccessible(false);
             }
         }
         return (T) object;
     }
+
 }
